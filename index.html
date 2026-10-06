@@ -3,200 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AstroSphere Pro // Advanced Orbital Simulator</title>
+  <title>AstroSphere OS // Quantum Orbital HUD</title>
   <style>
     :root {
-      --bg-deep: #030712;
-      --bg-panel: rgba(10, 15, 30, 0.85);
-      --surface: rgba(30, 41, 59, 0.6);
+      --bg-core: #020617;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --surface: rgba(30, 41, 59, 0.5);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --accent-cyan: #00f2fe;
-      --accent-blue: #4facfe;
-      --border-glass: rgba(255, 255, 255, 0.1);
-      --shadow-glow: rgba(0, 242, 254, 0.2);
+      --neon-cyan: #00f2fe;
+      --neon-blue: #4facfe;
+      --border-glass: rgba(0, 242, 254, 0.2);
+      --shadow-glow: 0 0 30px rgba(0, 242, 254, 0.25);
     }
 
     body.light-mode {
-      --bg-deep: #f8fafc;
-      --bg-panel: rgba(255, 255, 255, 0.9);
-      --surface: rgba(241, 245, 249, 0.8);
+      --bg-core: #f1f5f9;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --surface: rgba(226, 232, 240, 0.6);
       --text-main: #0f172a;
-      --text-muted: #64748b;
-      --accent-cyan: #0284c7;
-      --accent-blue: #0369a1;
-      --border-glass: rgba(0, 0, 0, 0.08);
-      --shadow-glow: rgba(2, 132, 199, 0.15);
+      --text-muted: #475569;
+      --neon-cyan: #0284c7;
+      --neon-blue: #0369a1;
+      --border-glass: rgba(2, 132, 199, 0.3);
+      --shadow-glow: 0 0 30px rgba(2, 132, 199, 0.15);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-    body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-deep); color: var(--text-main); }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; transition: background 0.3s, color 0.3s, border 0.3s; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-core); color: var(--text-main); }
 
-    /* Fondo espacial con gradiente dinámico */
-    .space-background {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-      background: radial-gradient(circle at 50% 50%, #0f172a 0%, var(--bg-deep) 100%);
-    }
+    .space-canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #0f172a 0%, var(--bg-core) 100%); }
 
-    /* Pantalla de Bienvenida Profesional (Splash Screen) */
+    /* --- PANTALLA DE INICIO (SPLASH SCREEN ÉPICA) --- */
     #welcomeScreen {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(3, 7, 18, 0.92); backdrop-filter: blur(20px);
-      z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 20px;
+      background: rgba(2, 6, 23, 0.94); backdrop-filter: blur(24px);
+      z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px;
     }
-    body.light-mode #welcomeScreen { background: rgba(248, 250, 252, 0.92); }
+    body.light-mode #welcomeScreen { background: rgba(241, 245, 249, 0.94); }
 
-    .welcome-card {
-      background: var(--bg-panel); border: 1px solid var(--border-glass);
-      padding: 40px 30px; border-radius: 24px; text-align: center; max-width: 440px; width: 100%;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    .welcome-container {
+      background: var(--bg-card); border: 1px solid var(--border-glass);
+      padding: 45px 35px; border-radius: 28px; text-align: center; max-width: 460px; width: 100%;
+      box-shadow: var(--shadow-glow), 0 25px 50px rgba(0,0,0,0.6);
+      animation: zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative; overflow: hidden;
+    }
+    .welcome-container::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
     }
 
-    .welcome-badge {
-      display: inline-block; background: rgba(0, 242, 254, 0.1); color: var(--accent-cyan);
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-      padding: 6px 12px; border-radius: 20px; margin-bottom: 16px; border: 1px solid rgba(0, 242, 254, 0.2);
+    .core-icon-glow {
+      width: 70px; height: 70px; margin: 0 auto 20px auto;
+      background: rgba(0, 242, 254, 0.08); border: 1px solid var(--neon-cyan);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 30px; box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+      animation: pulseGlow 2s infinite ease-in-out;
     }
 
-    .welcome-card h1 { font-size: 26px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }
-    .welcome-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+    .welcome-container h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .welcome-container p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; }
 
-    .launch-btn {
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-      color: #030712; border: none; padding: 14px 28px; font-weight: 700; font-size: 14px;
-      border-radius: 12px; cursor: pointer; width: 100%;
-      box-shadow: 0 10px 25px var(--shadow-glow); display: flex; align-items: center; justify-content: center; gap: 8px;
+    .enter-sys-btn {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      color: #020617; border: none; padding: 14px 24px; font-weight: 800; font-size: 14px;
+      border-radius: 14px; cursor: pointer; width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 242, 254, 0.35);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
-    .launch-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+    .enter-sys-btn:hover { transform: translateY(-2px); opacity: 0.95; }
 
-    /* Barra Superior Profesional (HUD Navbar) */
+    /* --- BARRA SUPERIOR HUD --- */
     .top-control-bar {
       position: fixed; top: 0; left: 0; width: 100%;
-      background: var(--bg-panel); backdrop-filter: blur(16px);
+      background: var(--bg-card); backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border-glass);
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 20px; z-index: 100; gap: 15px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 12px 20px; z-index: 100; gap: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
+    .hud-brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; letter-spacing: 0.5px; }
+    .highlight { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0,242,254,0.4); }
 
-    .hud-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; letter-spacing: -0.3px; }
-    .brand-icon { width: 32px; height: 32px; background: rgba(0,242,254,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid rgba(0,242,254,0.2); }
-    .highlight { color: var(--accent-cyan); }
-
-    .hud-controls-deck { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .hud-controls-deck { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .hud-group { display: flex; flex-direction: column; gap: 3px; }
-    .hud-label { font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hud-label { font-size: 9px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; }
 
     .cyber-select, .cyber-btn {
       background: var(--surface); border: 1px solid var(--border-glass);
-      color: var(--text-main); padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500;
-      cursor: pointer; outline: none; display: flex; align-items: center; gap: 6px;
+      color: var(--text-main); padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 600;
+      cursor: pointer; outline: none;
     }
-    .cyber-select:hover, .cyber-btn:hover { border-color: var(--accent-cyan); }
-    .cyber-btn.active { background: rgba(0, 242, 254, 0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); }
-    
-    .slider-wrapper { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border-glass); padding: 5px 10px; border-radius: 8px; }
-    .cyber-range { accent-color: var(--accent-cyan); cursor: pointer; height: 4px; width: 70px; }
+    .cyber-select:hover, .cyber-btn:hover { border-color: var(--neon-cyan); }
+    .cyber-btn.active { background: rgba(0, 242, 254, 0.15); border-color: var(--neon-cyan); color: var(--neon-cyan); }
 
+    .slider-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border-glass); padding: 5px 10px; border-radius: 9px; }
+    .cyber-range { accent-color: var(--neon-cyan); cursor: pointer; height: 4px; width: 75px; }
     .hud-actions { display: flex; gap: 6px; }
 
-    /* Viewport de Canvas */
+    /* Viewport */
     .simulation-viewport { width: 100%; height: 100vh; }
     canvas { display: block; touch-action: none; }
 
-    /* Modal de Definición de Planetas */
+    /* MODAL DE PLANETA */
     .info-modal {
       position: fixed; bottom: 24px; right: 24px; width: 360px; max-height: 82vh;
-      background: var(--bg-panel); backdrop-filter: blur(20px); border: 1px solid var(--border-glass);
-      border-radius: 20px; padding: 22px; z-index: 200; box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+      background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-glass);
+      border-radius: 22px; padding: 22px; z-index: 200; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
       overflow-y: auto; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .info-modal.hidden { display: none !important; }
-    
     .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .modal-title-group h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
-    .modal-title-group span { font-size: 11px; color: var(--accent-cyan); font-weight: 600; text-transform: uppercase; }
+    .modal-header h2 { font-size: 18px; font-weight: 900; }
+    .close-btn { background: var(--surface); border: 1px solid var(--border-glass); color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     
-    .close-btn { background: var(--surface); border: 1px solid var(--border-glass); color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .close-btn:hover { color: var(--text-main); border-color: var(--text-muted); }
-
-    .modal-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 14px; }
     .stat-box { background: var(--surface); border: 1px solid var(--border-glass); padding: 10px; border-radius: 10px; }
-    .stat-box.full-width { grid-column: span 2; }
-    .stat-box .label { display: block; font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
-    .stat-box strong { font-size: 12px; color: var(--accent-cyan); font-weight: 700; }
+    .stat-box.full { grid-column: span 2; }
+    .stat-box .label { display: block; font-size: 9px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
+    .stat-box strong { font-size: 12px; color: var(--neon-cyan); font-weight: 800; }
 
-    @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    @media screen and (max-width: 900px) {
-      body, html { overflow: auto; }
-      .top-control-bar { position: relative; flex-direction: column; align-items: stretch; padding: 12px; }
-      .hud-controls-deck { flex-direction: column; width: 100%; gap: 10px; }
-      .hud-group, .cyber-select, .slider-wrapper, .hud-actions, .cyber-btn { width: 100%; justify-content: center; }
-      .simulation-viewport { height: 55vh; }
-      .info-modal { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: 94% !important; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Pantalla de Bienvenida Profesional -->
-  <div id="welcomeScreen">
-    <div class="welcome-card">
-      <div class="welcome-badge">Sistema Interactivo v2.5</div>
-      <h1>AstroSphere Pro</h1>
-      <p>Simulador orbital en tiempo real con telemetría estelar avanzada, controles interactivos y visualización de alta precisión.</p>
-      <button id="startExperience" class="launch-btn">
-        <span>Iniciar Exploración Orbital</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="space-background"></div>
-
-  <!-- Barra Superior (HUD) Rediseñada -->
-  <header class="top-control-bar">
-    <div class="hud-brand">
-      <div class="brand-icon">🪐</div>
-      <span>ASTRO<span class="highlight">SPHERE</span></span>
-    </div>
-    <div class="hud-controls-deck">
-      <div class="hud-group">
-        <span class="hud-label">Enfocar Cuerpo</span>
-        <select id="planetSelect" class="cyber-select">
-          <option value="all">Vista General del Sistema</option>
-          <option value="sun">El Sol (Estrella)</option>
-          <option value="mercury">Mercurio</option>
-          <option value="venus">Venus</option>
-          <option value="earth">Tierra</option>
-          <option value="mars">Marte</option>
-          <option value="jupiter">Júpiter</option>
-          <option value="saturn">Saturno</option>
-          <option value="uranus">Urano</option>
-          <option value="neptune">Neptuno</option>
-        </select>
-      </div>
-
-      <div class="hud-group">
-        <span class="hud-label">Velocidad Orbital</span>
-        <div class="slider-wrapper">
-          <span style="font-size:10px; color:var(--text-muted)">1x</span>
-          <input type="range" id="speedRange" min="0.1" max="5" step="0.1" value="1" class="cyber-range">
-        </div>
-      </div>
-
-      <div class="hud-group">
-        <span class="hud-label">Inclinación 3D</span>
-        <div class="slider-wrapper">
-          <span style="font-size:10px; color:var(--text-muted)">3D</span>
-          <input type="range" id="tiltRange" min="20" max="80" value="50" class="cyber-range">
-        </div>
-      </div>
-
-      <div class="hud-actions">
-        <button id="pausePlayBtn" class="cyber-btn active" title
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0
