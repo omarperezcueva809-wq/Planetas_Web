@@ -1,12 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // 🚀 Ocultar pantalla de carga al instante (sin bloqueos)
-  const loaderScreen = document.getElementById('loaderScreen');
-  if (loaderScreen) {
-    loaderScreen.style.opacity = '0';
-    setTimeout(() => loaderScreen.style.display = 'none', 300);
-  }
-
-  // 🌌 Renderizado del Simulador
   const canvas = document.getElementById('solarCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -240,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('infoModal').classList.remove('hidden');
   }
 
-  // Modales Gráfico y Telemetría
   const openChartBtn = document.getElementById('openChartBtn');
   const chartModal = document.getElementById('chartModal');
   const closeChartModal = document.getElementById('closeChartModal');
