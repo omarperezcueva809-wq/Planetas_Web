@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AstroSphere Pro | Simulador Hiperrealista</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,14 +11,34 @@
 </head>
 <body>
 
-  <!-- 🌌 Fondo Cósmico -->
+  <!-- 🌌 Fondo Cósmico Cinemático Dinámico -->
   <div class="deep-space-bg">
     <div class="nebula-glow nebula-1"></div>
     <div class="nebula-glow nebula-2"></div>
     <div class="stars-layer"></div>
   </div>
 
-  <!-- 🎛️ Command HUD Superior (100% Adaptable a Celular) -->
+  <!-- 🚀 Pantalla de Carga Estelar Avanzada (Tarjeta Holográfica de 6 Segundos) -->
+  <div id="loaderScreen" class="loader-screen">
+    <div class="loader-card-box">
+      <div class="corner-tl"></div>
+      <div class="corner-tr"></div>
+      <div class="corner-bl"></div>
+      <div class="corner-br"></div>
+      
+      <div class="loader"></div>
+      <div class="loader-badge">SISTEMA DE TELEMETRÍA V5.0</div>
+      <h1 class="loader-title">ASTRO<span class="highlight">SPHERE PRO</span></h1>
+      <p id="loaderText" class="loader-subtitle">Estableciendo enlace orbital (0/6s)...</p>
+      
+      <div class="loader-progress-bar">
+        <div id="loaderBar" class="loader-fill"></div>
+      </div>
+      <div class="loader-footer-status">ESTADO: INICIALIZANDO MATRIZ GRAVITACIONAL</div>
+    </div>
+  </div>
+
+  <!-- 🎛️ Command HUD Superior Profesional -->
   <header class="top-control-bar">
     <div class="hud-brand">
       <span class="brand-icon">🪐</span>
@@ -62,44 +82,65 @@
       <div class="hud-actions">
         <button id="pausePlayBtn" class="cyber-btn active" title="Pausar o reanudar">⏸️ Pausa</button>
         <button id="toggleOrbitsBtn" class="cyber-btn active" title="Mostrar/Ocultar órbitas">🌐 Órbitas</button>
-        <button id="themeToggleBtn" class="cyber-btn" title="Cambiar Tema">🌙 Tema</button>
+        <button id="themeToggleBtn" class="cyber-btn" title="Cambiar Tema Claro/Oscuro">🌙 Tema</button>
         <button id="openChartBtn" class="cyber-btn accent" title="Gráfico de distancias">📊 Distancias</button>
       </div>
     </div>
   </header>
 
-  <!-- 🌌 Lienzo Principal -->
+  <!-- 🌌 Lienzo Principal Ampliado -->
   <main class="simulation-viewport">
     <canvas id="solarCanvas"></canvas>
   </main>
 
-  <!-- 📊 Modal de Gráficos -->
+  <!-- 📊 Modal de Gráficos de Distancia -->
   <div id="chartModal" class="cyber-modal hidden">
     <div class="modal-content-box">
       <button id="closeChartModal" class="close-btn">&times;</button>
       <h2>Gráfico de Distancias al Sol (UA)</h2>
-      <p class="modal-desc">Distancia media de cada cuerpo celeste respecto al Sol.</p>
+      <p class="modal-desc">Distancia media de cada cuerpo celeste respecto al Sol medida en Unidades Astronómicas.</p>
       <div class="chart-bars-container" id="chartBarsContainer"></div>
     </div>
   </div>
 
-  <!-- 📋 Panel Lateral / Inferior de Telemetría -->
+  <!-- 📋 Panel Lateral de Telemetría Ampliado y Enriquecido -->
   <aside id="infoModal" class="info-modal hidden">
     <button id="closeModal" class="close-btn">&times;</button>
     <div class="modal-header">
-      <span id="modalCategory" class="modal-category">TELEMETRÍA ORBITAL</span>
+      <span id="modalCategory" class="modal-category">TELEMETRÍA ORBITAL AVANZADA</span>
       <h2 id="modalTitle">Planeta</h2>
     </div>
-    <p id="modalDesc" class="modal-desc">Descripción...</p>
+    <p id="modalDesc" class="modal-desc">Descripción detallada...</p>
     
     <div class="stats-grid">
-      <div class="stat-box"><span class="label">Diámetro</span><strong id="statDia">0 km</strong></div>
-      <div class="stat-box"><span class="label">Distancia Solar</span><strong id="statDist">0 AU</strong></div>
-      <div class="stat-box"><span class="label">Período Orbital</span><strong id="statOrb">0 días</strong></div>
-      <div class="stat-box"><span class="label">Temperatura</span><strong id="statTemp">0 °C</strong></div>
-      <div class="stat-box full-width"><span class="label">Composición</span><strong id="statComp">-</strong></div>
-      <div class="stat-box"><span class="label">Gravedad</span><strong id="statGrav">0 m/s²</strong></div>
-      <div class="stat-box"><span class="label">Satélites</span><strong id="statMoons">0 Lunas</strong></div>
+      <div class="stat-box">
+        <span class="label">Diámetro</span>
+        <strong id="statDia">0 km</strong>
+      </div>
+      <div class="stat-box">
+        <span class="label">Distancia Solar</span>
+        <strong id="statDist">0 AU</strong>
+      </div>
+      <div class="stat-box">
+        <span class="label">Período Orbital</span>
+        <strong id="statOrb">0 días</strong>
+      </div>
+      <div class="stat-box">
+        <span class="label">Temperatura</span>
+        <strong id="statTemp">0 °C</strong>
+      </div>
+      <div class="stat-box full-width">
+        <span class="label">Composición Química / Atmosférica</span>
+        <strong id="statComp">Hidrógeno y Helio</strong>
+      </div>
+      <div class="stat-box">
+        <span class="label">Gravedad Superficial</span>
+        <strong id="statGrav">0 m/s²</strong>
+      </div>
+      <div class="stat-box">
+        <span class="label">Satélites Naturales</span>
+        <strong id="statMoons">0 Lunas</strong>
+      </div>
     </div>
   </aside>
 
