@@ -3,78 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AstroSphere Pro | Simulador</title>
+  <title>AstroSphere Pro | Simulador del Sistema Solar</title>
   <style>
     :root {
-      --primary-cyan: #00f2fe;
       --bg-dark: #030712;
+      --bg-panel: rgba(15, 23, 42, 0.9);
       --text-main: #f8fafc;
-      --glass-bg: rgba(15, 23, 42, 0.9);
+      --text-muted: #94a3b8;
+      --primary-cyan: #00f2fe;
       --border-glass: rgba(255, 255, 255, 0.12);
+      --sun-glow: #ff4400;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+    body.light-mode {
+      --bg-dark: #f1f5f9;
+      --bg-panel: rgba(255, 255, 255, 0.92);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary-cyan: #0284c7;
+      --border-glass: rgba(0, 0, 0, 0.12);
+      --sun-glow: #d97706;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; transition: background 0.3s, color 0.3s; }
     body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-dark); color: var(--text-main); }
-    .deep-space-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #0f172a 0%, #030712 100%); }
     
+    .deep-space-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-dark) 100%); }
+
+    /* Pantalla de Inicio / Splash */
+    #welcomeScreen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(16px);
+      z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 20px;
+    }
+    body.light-mode #welcomeScreen { background: rgba(241, 245, 249, 0.95); }
+    .welcome-card {
+      background: var(--bg-panel); border: 1px solid var(--border-glass);
+      padding: 30px; border-radius: 20px; text-align: center; max-width: 420px; width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease-out;
+    }
+    .welcome-card h1 { font-size: 24px; margin-bottom: 10px; font-weight: 800; }
+    .welcome-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .start-btn {
+      background: linear-gradient(135deg, var(--primary-cyan), #4facfe); color: #030712;
+      border: none; padding: 12px 24px; font-weight: 700; font-size: 14px; border-radius: 10px;
+      cursor: pointer; width: 100%; box-shadow: 0 10px 20px rgba(0, 242, 254, 0.3);
+    }
+    .start-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Barra Superior de Controles */
     .top-control-bar {
       position: fixed; top: 0; left: 0; width: 100%;
-      background: rgba(5, 8, 20, 0.95);
-      backdrop-filter: blur(10px);
+      background: var(--bg-panel); backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-glass);
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 15px; z-index: 100; gap: 10px;
     }
-    .hud-brand { display: flex; align-items: center; gap: 8px; }
-    .brand-title { font-size: 15px; font-weight: 700; }
+    .hud-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
     .highlight { color: var(--primary-cyan); }
     
-    .hud-controls-deck { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .hud-controls-deck { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .hud-group { display: flex; flex-direction: column; gap: 2px; }
-    .hud-label { font-size: 10px; color: #cbd5e1; }
+    .hud-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
     
     .cyber-select, .cyber-btn {
-      background: rgba(30, 41, 59, 0.9); border: 1px solid var(--border-glass);
-      color: var(--text-main); padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; outline: none;
+      background: var(--bg-dark); border: 1px solid var(--border-glass);
+      color: var(--text-main); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; outline: none;
     }
     .cyber-btn.active { background: rgba(0, 242, 254, 0.15); border-color: var(--primary-cyan); color: var(--primary-cyan); }
     .cyber-range { accent-color: var(--primary-cyan); cursor: pointer; height: 4px; width: 80px; }
-    .hud-actions { display: flex; gap: 5px; }
+    .hud-actions { display: flex; gap: 6px; }
 
     .simulation-viewport { width: 100%; height: 100vh; }
     canvas { display: block; touch-action: none; }
 
+    /* Modal de Definición de Planetas */
     .info-modal {
-      position: fixed; bottom: 15px; right: 15px; width: 320px; max-height: 80vh;
-      background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--border-glass);
-      border-radius: 12px; padding: 15px; z-index: 200; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-      overflow-y: auto;
+      position: fixed; bottom: 20px; right: 20px; width: 340px; max-height: 80vh;
+      background: var(--bg-panel); backdrop-filter: blur(16px); border: 1px solid var(--border-glass);
+      border-radius: 16px; padding: 20px; z-index: 200; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      overflow-y: auto; animation: slideUp 0.3s ease-out;
     }
     .info-modal.hidden { display: none !important; }
-    .close-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-    .stat-box { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; }
+    .close-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+    .stat-box { background: var(--bg-dark); border: 1px solid var(--border-glass); padding: 8px 10px; border-radius: 8px; }
     .stat-box.full-width { grid-column: span 2; }
-    .stat-box .label { display: block; font-size: 10px; color: #94a3b8; }
+    .stat-box .label { display: block; font-size: 10px; color: var(--text-muted); }
     .stat-box strong { font-size: 12px; color: var(--primary-cyan); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     @media screen and (max-width: 900px) {
       body, html { overflow: auto; }
       .top-control-bar { position: relative; flex-direction: column; align-items: stretch; }
       .hud-controls-deck { flex-direction: column; width: 100%; }
       .hud-group, .cyber-select, .cyber-range, .hud-actions, .cyber-btn { width: 100%; }
-      .simulation-viewport { height: 65vh; }
+      .simulation-viewport { height: 60vh; }
       .info-modal { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: 95% !important; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Pantalla de Bienvenida -->
+  <div id="welcomeScreen">
+    <div class="welcome-card">
+      <div style="font-size: 40px; margin-bottom: 10px;">🪐</div>
+      <h1>AstroSphere Pro</h1>
+      <p>Simulador interactivo del Sistema Solar en tiempo real. Explora órbitas, telemetría y datos estelares con alta fluidez.</p>
+      <button id="startExperience" class="start-btn">Iniciar Exploración 🚀</button>
+    </div>
+  </div>
+
   <div class="deep-space-bg"></div>
 
+  <!-- Barra Superior -->
   <header class="top-control-bar">
     <div class="hud-brand">
       <span>🪐</span>
-      <span class="brand-title">ASTRO<span class="highlight">SIM</span></span>
+      <span>ASTRO<span class="highlight">SIM</span></span>
     </div>
     <div class="hud-controls-deck">
       <div class="hud-group">
@@ -103,29 +152,34 @@
       <div class="hud-actions">
         <button id="pausePlayBtn" class="cyber-btn active">⏸️ Pausa</button>
         <button id="toggleOrbitsBtn" class="cyber-btn active">🌐 Órbitas</button>
+        <button id="themeToggleBtn" class="cyber-btn">☀️ / 🌙</button>
       </div>
     </div>
   </header>
 
+  <!-- Lienzo de Simulación -->
   <main class="simulation-viewport">
     <canvas id="solarCanvas"></canvas>
   </main>
 
+  <!-- Tarjeta de Definición e Información -->
   <aside id="infoModal" class="info-modal hidden">
     <button id="closeModal" class="close-btn">&times;</button>
-    <h2 id="modalTitle" style="font-size: 16px; margin-bottom: 5px;">Planeta</h2>
-    <p id="modalDesc" style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;"></p>
+    <h2 id="modalTitle" style="font-size: 16px; margin-bottom: 5px; font-weight: 700;">Planeta</h2>
+    <p id="modalDesc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;"></p>
     <div class="stats-grid">
       <div class="stat-box"><span class="label">Diámetro</span><strong id="statDia">0</strong></div>
-      <div class="stat-box"><span class="label">Distancia</span><strong id="statDist">0</strong></div>
-      <div class="stat-box"><span class="label">Órbita</span><strong id="statOrb">0</strong></div>
+      <div class="stat-box"><span class="label">Distancia Sol</span><strong id="statDist">0</strong></div>
+      <div class="stat-box"><span class="label">Período Órbita</span><strong id="statOrb">0</strong></div>
       <div class="stat-box"><span class="label">Temperatura</span><strong id="statTemp">0</strong></div>
-      <div class="stat-box full-width"><span class="label">Composición</span><strong id="statComp">-</strong></div>
+      <div class="stat-box full-width"><span class="label">Composición Principal</span><strong id="statComp">-</strong></div>
     </div>
   </aside>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      const startBtn = document.getElementById('startExperience');
       const canvas = document.getElementById('solarCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -138,15 +192,15 @@
       resizeCanvas();
 
       const celestialObjects = [
-        { id: 'sun', name: 'El Sol', baseColor: '#ffaa00', radius: 45, distance: 0, speed: 0, angle: 0, desc: 'Estrella central del sistema solar.', dia: '1,392,700 km', dist: '0 AU', orb: 'N/A', temp: '5,500 °C', comp: 'Hidrógeno y Helio' },
-        { id: 'mercury', name: 'Mercurio', baseColor: '#9ca3af', radius: 8, distance: 90, speed: 0.03, angle: Math.random() * 6, desc: 'Planeta más cercano al Sol.', dia: '4,879 km', dist: '0.39 AU', orb: '88 días', temp: '167 °C', comp: 'Hierro y silicatos' },
-        { id: 'venus', name: 'Venus', baseColor: '#facc15', radius: 12, distance: 135, speed: 0.02, angle: Math.random() * 6, desc: 'Mundo rocoso con efecto invernadero.', dia: '12,104 km', dist: '0.72 AU', orb: '225 días', temp: '464 °C', comp: 'Dióxido de carbono' },
-        { id: 'earth', name: 'Tierra', baseColor: '#38bdf8', radius: 14, distance: 185, speed: 0.015, angle: Math.random() * 6, desc: 'Nuestro hogar, alberga vida.', dia: '12,742 km', dist: '1.00 AU', orb: '365 días', temp: '15 °C', comp: 'Nitrógeno, Oxígeno, Agua' },
-        { id: 'mars', name: 'Marte', baseColor: '#f87171', radius: 10, distance: 240, speed: 0.011, angle: Math.random() * 6, desc: 'El Planeta Rojo.', dia: '6,779 km', dist: '1.52 AU', orb: '687 días', temp: '-65 °C', comp: 'Dióxido de carbono' },
-        { id: 'jupiter', name: 'Júpiter', baseColor: '#fb923c', radius: 24, distance: 320, speed: 0.007, angle: Math.random() * 6, desc: 'Gigante gaseoso.', dia: '139,820 km', dist: '5.20 AU', orb: '11.8 años', temp: '-110 °C', comp: 'Hidrógeno y Helio' },
-        { id: 'saturn', name: 'Saturno', baseColor: '#fde047', radius: 20, distance: 400, speed: 0.0048, angle: Math.random() * 6, desc: 'Famoso por sus anillos.', dia: '116,460 km', dist: '9.58 AU', orb: '29.5 años', temp: '-140 °C', comp: 'Hidrógeno y Hielo' },
-        { id: 'uranus', name: 'Urano', baseColor: '#2dd4bf', radius: 16, distance: 480, speed: 0.003, angle: Math.random() * 6, desc: 'Gigante helado.', dia: '50,724 km', dist: '19.2 AU', orb: '84 años', temp: '-195 °C', comp: 'Agua y metano' },
-        { id: 'neptune', name: 'Neptuno', baseColor: '#60a5fa', radius: 15, distance: 550, speed: 0.002, angle: Math.random() * 6, desc: 'Mundo azul tempestuoso.', dia: '49,244 km', dist: '30.0 AU', orb: '165 años', temp: '-200 °C', comp: 'Metano y amoníaco' }
+        { id: 'sun', name: 'El Sol', baseColor: '#ffaa00', radius: 45, distance: 0, speed: 0, angle: 0, desc: 'Estrella de tipo espectral G2V que centraliza la masa y gravedad del sistema solar.', dia: '1,392,700 km', dist: '0 AU', orb: 'N/A', temp: '5,500 °C (Núcleo: 15M °C)', comp: 'Hidrógeno (73%) y Helio (25%)' },
+        { id: 'mercury', name: 'Mercurio', baseColor: '#9ca3af', radius: 8, distance: 90, speed: 0.03, angle: Math.random() * 6, desc: 'El planeta más pequeño y cercano al Sol; experimenta variaciones térmicas extremas.', dia: '4,879 km', dist: '0.39 AU', orb: '88 días', temp: '-180°C a 430 °C', comp: 'Rocas silicatadas y núcleo metálico' },
+        { id: 'venus', name: 'Venus', baseColor: '#facc15', radius: 12, distance: 135, speed: 0.02, angle: Math.random() * 6, desc: 'Mundo rocoso cubierto por densas nubes de ácido sulfúrico con un brutal efecto invernadero.', dia: '12,104 km', dist: '0.72 AU', orb: '225 días', temp: '464 °C', comp: 'Dióxido de carbono y nitrógeno' },
+        { id: 'earth', name: 'Tierra', baseColor: '#38bdf8', radius: 14, distance: 185, speed: 0.015, angle: Math.random() * 6, desc: 'Nuestro hogar, el único cuerpo celeste conocido que alberga abundante vida orgánica.', dia: '12,742 km', dist: '1.00 AU', orb: '365 días', temp: '15 °C promedio', comp: 'Nitrógeno, Oxígeno, Agua líquida' },
+        { id: 'mars', name: 'Marte', baseColor: '#f87171', radius: 10, distance: 240, speed: 0.011, angle: Math.random() * 6, desc: 'El Planeta Rojo, objetivo clave de exploración espacial por sus antiguos vestigios de agua.', dia: '6,779 km', dist: '1.52 AU', orb: '687 días', temp: '-65 °C promedio', comp: 'Dióxido de carbono, óxido de hierro' },
+        { id: 'jupiter', name: 'Júpiter', baseColor: '#fb923c', radius: 24, distance: 320, speed: 0.007, angle: Math.random() * 6, desc: 'El gigante gaseoso más masivo del sistema, famoso por su imponente Gran Mancha Roja.', dia: '139,820 km', dist: '5.20 AU', orb: '11.8 años', temp: '-110 °C', comp: 'Hidrógeno y Helio molecular' },
+        { id: 'saturn', name: 'Saturno', baseColor: '#fde047', radius: 20, distance: 400, speed: 0.0048, angle: Math.random() * 6, desc: 'Reconocido mundialmente por su deslumbrante y complejo sistema de anillos helados.', dia: '116,460 km', dist: '9.58 AU', orb: '29.5 años', temp: '-140 °C', comp: 'Hidrógeno, Helio y partículas de hielo' },
+        { id: 'uranus', name: 'Urano', baseColor: '#2dd4bf', radius: 16, distance: 480, speed: 0.003, angle: Math.random() * 6, desc: 'Gigante helado singular que orbita completamente acostado sobre su propio eje.', dia: '50,724 km', dist: '19.2 AU', orb: '84 años', temp: '-195 °C', comp: 'Hielo de agua, amoníaco y metano' },
+        { id: 'neptune', name: 'Neptuno', baseColor: '#60a5fa', radius: 15, distance: 550, speed: 0.002, angle: Math.random() * 6, desc: 'Planeta azul profundo azotado por los vientos más rápidos y violentos del sistema solar.', dia: '49,244 km', dist: '30.0 AU', orb: '165 años', temp: '-200 °C', comp: 'Hielo, metano y fluido superiónico' }
       ];
 
       let isRunning = true;
@@ -155,28 +209,34 @@
       let tiltFactor = 0.50;
       let selectedPlanetId = 'all';
 
+      // Iniciar al hacer clic en el botón de bienvenida
+      startBtn.addEventListener('click', () => {
+        welcomeScreen.style.opacity = '0';
+        setTimeout(() => welcomeScreen.style.display = 'none', 400);
+      });
+
       function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
-        // Sol
+        // Renderizar Sol
         ctx.beginPath();
         ctx.arc(centerX, centerY, celestialObjects[0].radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffaa00';
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = '#ff4400';
+        ctx.fillStyle = celestialObjects[0].baseColor;
+        ctx.shadowBlur = 35;
+        ctx.shadowColor = getComputedStyle(document.body).getPropertyValue('--sun-glow').trim() || '#ff4400';
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Planetas
+        // Renderizar Planetas y Órbitas
         for (let i = 1; i < celestialObjects.length; i++) {
           const p = celestialObjects[i];
 
           if (showOrbits) {
             ctx.beginPath();
             ctx.ellipse(centerX, centerY, p.distance, p.distance * tiltFactor, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = selectedPlanetId === p.id ? 'rgba(0, 242, 254, 0.8)' : 'rgba(255, 255, 255, 0.08)';
+            ctx.strokeStyle = selectedPlanetId === p.id ? 'var(--primary-cyan)' : 'var(--border-glass)';
             ctx.lineWidth = selectedPlanetId === p.id ? 2 : 1;
             ctx.stroke();
           }
@@ -189,12 +249,12 @@
           ctx.beginPath();
           ctx.arc(x, y, p.radius, 0, Math.PI * 2);
           ctx.fillStyle = p.baseColor;
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 12;
           ctx.shadowColor = p.baseColor;
           ctx.fill();
           ctx.shadowBlur = 0;
 
-          ctx.fillStyle = '#f8fafc';
+          ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-main').trim();
           ctx.font = '11px system-ui';
           ctx.fillText(p.name, x + p.radius + 6, y + 4);
 
@@ -205,7 +265,7 @@
         requestAnimationFrame(render);
       }
 
-      // Controles
+      // Controles y UI
       document.getElementById('planetSelect').addEventListener('change', (e) => {
         selectedPlanetId = e.target.value;
         if (selectedPlanetId !== 'all') {
@@ -233,13 +293,19 @@
         orbitsBtn.classList.toggle('active', showOrbits);
       });
 
+      // Cambio de Tema Claro / Oscuro
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+      });
+
       canvas.addEventListener('pointerdown', (e) => {
         const rect = canvas.getBoundingClientRect();
         const cx = e.clientX - rect.left;
         const cy = e.clientY - rect.top;
         celestialObjects.forEach(p => {
           const dist = p.id === 'sun' ? Math.hypot(cx - canvas.width/2, cy - canvas.height/2) : Math.hypot(cx - p.currentX, cy - p.currentY);
-          if (dist < p.radius + 10) {
+          if (dist < p.radius + 12) {
             selectedPlanetId = p.id;
             document.getElementById('planetSelect').value = p.id;
             openModal(p);
